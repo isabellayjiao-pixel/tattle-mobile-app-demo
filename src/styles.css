@@ -33,15 +33,17 @@ a:active {
 }
 
 :root {
+  --demo-shell-w: 402px;
   --demo-shell-h: 854px;
   --demo-toggle-area-h: 68px;
   --demo-stage-h: calc(var(--demo-shell-h) + var(--demo-toggle-area-h));
   --demo-stage-w: 750px;
-  --demo-panel-w: 320px;
+  --demo-panel-w: calc(var(--demo-shell-w) * 0.8);
+  --demo-panel-h: calc(var(--demo-shell-h) * 0.8);
   --demo-panel-header-h: 93px;
-  --demo-gap: 28px;
-  --demo-stage-pad-y: clamp(8px, 1.5vmin, 20px);
-  --demo-stage-pad-x: clamp(12px, 2.5vmin, 28px);
+  --demo-gap: 64px;
+  --demo-stage-pad-y: clamp(24px, 4vmin, 48px);
+  --demo-stage-pad-x: clamp(16px, 3vmin, 36px);
 }
 
 html {
@@ -99,6 +101,7 @@ body {
   flex-shrink: 0;
   will-change: transform;
   padding-top: 16px;
+  padding-bottom: 28px;
 }
 
 .demo-fit {
@@ -1815,6 +1818,15 @@ button.group-row {
 
 .perf-scroll { padding-bottom: 150px; }
 
+.stats-anchor {
+  scroll-margin-top: 10px;
+}
+
+#stats-recovery.stats-anchor {
+  display: flex;
+  flex-direction: column;
+}
+
 /* value badges (rounded 8px, white text + white star/unit) */
 .val-badge {
   display: inline-flex;
@@ -3420,13 +3432,15 @@ button.group-row {
   flex-direction: column;
   flex-shrink: 0;
   align-self: flex-start;
-  position: sticky;
-  top: var(--demo-stage-pad-y);
   border-radius: 16px;
   overflow: hidden;
   background: var(--surface);
   border: 1px solid var(--border);
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+.demo-push-sidebar:not(.is-collapsed) {
+  height: var(--demo-panel-h);
 }
 
 .demo-panel-topbar {
@@ -3487,17 +3501,15 @@ button.group-row {
 }
 
 .demo-push-sidebar:not(.is-collapsed) .demo-panel-body {
-  max-height: calc(
-    min(calc(100svh - 2 * var(--demo-stage-pad-y) - var(--demo-toggle-area-h)), var(--demo-shell-h)) - var(--demo-panel-header-h)
-  );
+  flex: 1;
+  min-height: 0;
+  max-height: calc(var(--demo-panel-h) - var(--demo-panel-header-h));
 }
 
 .demo-panel-body-inner {
   display: flex;
   flex-direction: column;
-  height: calc(
-    min(calc(100svh - 2 * var(--demo-stage-pad-y) - var(--demo-toggle-area-h)), var(--demo-shell-h)) - var(--demo-panel-header-h)
-  );
+  height: calc(var(--demo-panel-h) - var(--demo-panel-header-h));
   min-height: 0;
   overflow: hidden;
 }
@@ -3505,8 +3517,8 @@ button.group-row {
 .demo-panel-toolbar {
   flex: 0 0 auto;
   display: grid;
-  gap: 12px;
-  padding: 14px 14px 10px;
+  gap: 14px;
+  padding: 14px 14px 12px;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
 }
@@ -3517,9 +3529,35 @@ button.group-row {
   justify-content: center;
   gap: 8px;
   width: 100%;
-  height: 46px;
-  padding: 0 16px;
-  font-size: 16px;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--canvas);
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.demo-reset-btn:hover {
+  background: #f0f1f3;
+  color: var(--text);
+}
+
+.demo-toolbar-group {
+  min-width: 0;
+}
+
+.demo-toolbar-label {
+  display: block;
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
 .demo-panel-search {
@@ -3527,7 +3565,43 @@ button.group-row {
 }
 
 .demo-panel-search input {
-  height: 42px;
+  height: 38px;
+  font-size: 14px;
+}
+
+.demo-persona-seg {
+  display: flex;
+  width: 100%;
+  padding: 3px;
+  border-radius: 10px;
+  background: #f0f1f3;
+  border: 1px solid var(--border);
+}
+
+.demo-persona-chip {
+  flex: 1;
+  height: 32px;
+  border: none;
+  border-radius: 8px;
+  padding: 0 6px;
+  background: transparent;
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.demo-persona-chip.active {
+  background: #fff;
+  color: var(--text);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.demo-persona-chip:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .demo-tier-chips {
@@ -3549,12 +3623,12 @@ button.group-row {
 .demo-tier-chip {
   flex-shrink: 0;
   height: 28px;
-  border: none;
-  border-radius: 50px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
   padding: 0 10px;
-  background: #ededed;
-  color: #8a8a8a;
-  font-size: 11px;
+  background: transparent;
+  color: var(--text-2);
+  font-size: 12px;
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
@@ -3563,6 +3637,7 @@ button.group-row {
 
 .demo-tier-chip.active {
   background: var(--blue);
+  border-color: var(--blue);
   color: #fff;
 }
 

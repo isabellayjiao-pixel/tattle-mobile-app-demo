@@ -13,7 +13,12 @@ import {
   getFeedbackById,
   locations
 } from "../dummyData";
-import { pushNotificationCatalog, pushTiers } from "../pushNotificationCatalog";
+import {
+  getNoticeScenario,
+  pushNotificationCatalog,
+  pushPersonas,
+  pushTiersByPersona
+} from "./demo/pushNotifications";
 import {
   IconInbox,
   IconTodo,
@@ -152,16 +157,18 @@ function HomeLockScreen({ notifications, onNotificationClick, onOpenApp }) {
   );
 }
 
-const DEMO_TIER_OPTIONS = ["all", ...pushTiers];
-
 function DemoPushSidebar({ activeId, onReset, onTrigger }) {
   const [collapsed, setCollapsed] = useState(true);
+  const [persona, setPersona] = useState("single");
   const [query, setQuery] = useState("");
   const [tierFilter, setTierFilter] = useState("all");
+
+  const tierOptions = ["all", ...(pushTiersByPersona[persona] ?? [])];
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return pushNotificationCatalog.filter((item) => {
+      if (item.persona !== persona) return false;
       if (tierFilter !== "all" && item.tier !== tierFilter) return false;
       if (!q) return true;
       return (
@@ -170,7 +177,7 @@ function DemoPushSidebar({ activeId, onReset, onTrigger }) {
         item.notificationType.toLowerCase().includes(q)
       );
     });
-  }, [query, tierFilter]);
+  }, [persona, query, tierFilter]);
 
   return (
     <aside className={`demo-push-sidebar ${collapsed ? "is-collapsed" : ""}`}>
@@ -195,13 +202,37 @@ function DemoPushSidebar({ activeId, onReset, onTrigger }) {
       <div className="demo-panel-body" aria-hidden={collapsed}>
         <div className="demo-panel-body-inner">
         <div className="demo-panel-toolbar">
-          <button className="btn-primary demo-reset-btn" type="button" onClick={onReset}>
-            <IconRefresh width={16} height={16} />
+          <button className="demo-reset-btn" type="button" onClick={onReset}>
+            <IconRefresh width={15} height={15} />
             Reset to Lock Screen
           </button>
 
+          <div className="demo-toolbar-group">
+            <span className="demo-toolbar-label">Audience</span>
+            <div className="demo-persona-seg" role="tablist" aria-label="Notification audience">
+              {pushPersonas.map((option) => (
+                <button
+                  key={option.id}
+                  type="button"
+                  role="tab"
+                  disabled={!option.enabled}
+                  title={option.enabled ? undefined : "Coming later"}
+                  aria-selected={persona === option.id}
+                  className={`demo-persona-chip ${persona === option.id ? "active" : ""}`}
+                  onClick={() => {
+                    if (!option.enabled) return;
+                    setPersona(option.id);
+                    setTierFilter("all");
+                  }}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="sheet-search demo-panel-search">
-            <IconSearch width={18} height={18} />
+            <IconSearch width={16} height={16} />
             <input
               placeholder="Search notifications…"
               value={query}
@@ -209,17 +240,20 @@ function DemoPushSidebar({ activeId, onReset, onTrigger }) {
             />
           </div>
 
-          <div className="demo-tier-chips">
-            {DEMO_TIER_OPTIONS.map((tier) => (
-              <button
-                key={tier}
-                type="button"
-                className={`demo-tier-chip ${tierFilter === tier ? "active" : ""}`}
-                onClick={() => setTierFilter(tier)}
-              >
-                {tier === "all" ? "All tiers" : tier}
-              </button>
-            ))}
+          <div className="demo-toolbar-group">
+            <span className="demo-toolbar-label">Tier</span>
+            <div className="demo-tier-chips">
+              {tierOptions.map((tier) => (
+                <button
+                  key={tier}
+                  type="button"
+                  className={`demo-tier-chip ${tierFilter === tier ? "active" : ""}`}
+                  onClick={() => setTierFilter(tier)}
+                >
+                  {tier === "all" ? "All" : tier}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -435,7 +469,7 @@ function locationShortName(loc) {
 const STORE_GROUPS = [
   { value: "grp_austin", label: "Austin Metro", locationIds: ["loc_001", "loc_002"] },
   { value: "grp_dallas", label: "Dallas Metro", locationIds: ["loc_003", "loc_004"] },
-  { value: "grp_houston", label: "Houston Metro", locationIds: ["loc_005", "loc_006"] },
+  { value: "grp_houston", label: "Houston Metro", locationIds: ["loc_005", "loc_006", "loc_012", "loc_013", "loc_014", "loc_015", "loc_016", "loc_017"] },
   { value: "grp_sa", label: "San Antonio", locationIds: ["loc_007"] },
   { value: "grp_nashville", label: "Nashville Region", locationIds: ["loc_008", "loc_009"] },
   { value: "grp_denver", label: "Denver Market", locationIds: ["loc_010", "loc_011"] }
@@ -485,15 +519,7 @@ const STATS_FILTER_GROUPS = [
     type: "location",
     label: "Location",
     mode: "multi",
-    options: [
-      { value: "7th-colorado", label: "7th & Colorado" },
-      { value: "aurora", label: "Aurora" },
-      { value: "ballpark", label: "Ballpark" },
-      { value: "brighton", label: "Brighton" },
-      { value: "central-park", label: "Central Park" },
-      { value: "dtc", label: "DTC" },
-      { value: "du", label: "DU" }
-    ]
+    options: locations.map((l) => ({ value: l.id, label: locationShortName(l) }))
   },
   {
     type: "date",
@@ -532,9 +558,36 @@ const STATS_FILTER_GROUPS = [
 ];
 
 const DEFAULT_STATS_FILTERS = [
-  { type: "location", value: "7th-colorado", label: "7th & Colorado" },
+  { type: "location", value: "loc_001", label: "Domain" },
   { type: "date", value: "90", label: "Past 90 days" }
 ];
+
+function filtersFromSearchParams(searchParams) {
+  const filters = [];
+  searchParams.getAll("group").forEach((value) => {
+    const group = STORE_GROUPS.find((sg) => sg.value === value);
+    if (group) filters.push({ type: "group", value: group.value, label: group.label });
+  });
+  searchParams.getAll("location").forEach((value) => {
+    const loc = locations.find((l) => l.id === value);
+    if (loc) filters.push({ type: "location", value: loc.id, label: locationShortName(loc) });
+  });
+  return filters;
+}
+
+function statsFiltersFromSearchParams(searchParams) {
+  const fromUrl = filtersFromSearchParams(searchParams);
+  if (!fromUrl.length) return [...DEFAULT_STATS_FILTERS];
+  const hasDate = fromUrl.some((f) => f.type === "date");
+  return hasDate ? fromUrl : [...fromUrl, { type: "date", value: "90", label: "Past 90 days" }];
+}
+
+function groupsFromSearchParams(searchParams) {
+  const fromUrl = searchParams.getAll("group").filter((value) =>
+    STORE_GROUPS.some((sg) => sg.value === value)
+  );
+  return fromUrl.length ? fromUrl : STORE_GROUPS.map((g) => g.value);
+}
 
 const FILTER_GROUPS = [
   { type: "rating", label: "Star Rating", mode: "range" },
@@ -688,11 +741,21 @@ function InboxScreen({ unreadIds, onMarkRead }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const tab = searchParams.get("tab") === "reviews" ? "reviews" : "surveys";
+  const scenario = getNoticeScenario(searchParams.get("notice"));
+  const inboxOverlay = scenario?.inbox;
 
   const [query, setQuery] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
   const [draft, setDraft] = useState([]);
-  const [activeFilters, setActiveFilters] = useState([]);
+  const [activeFilters, setActiveFilters] = useState(() => filtersFromSearchParams(searchParams));
+  const overlayKey = `${searchParams.get("notice") || ""}:${inboxOverlay?.allUnread ? "1" : "0"}`;
+  const [extraUnread, setExtraUnread] = useState(() =>
+    new Set(inboxOverlay?.allUnread ? (inboxOverlay.items || []).map((item) => item.id) : [])
+  );
+
+  useEffect(() => {
+    setExtraUnread(new Set(inboxOverlay?.allUnread ? (inboxOverlay.items || []).map((item) => item.id) : []));
+  }, [overlayKey]);
 
   const surveyItems = useMemo(
     () =>
@@ -711,7 +774,12 @@ function InboxScreen({ unreadIds, onMarkRead }) {
     []
   );
 
-  const baseItems = tab === "reviews" ? reviewItems : surveyItems;
+  const baseItems = useMemo(() => {
+    if (inboxOverlay?.items && (!inboxOverlay.tab || inboxOverlay.tab === tab)) {
+      return inboxOverlay.items;
+    }
+    return tab === "reviews" ? reviewItems : surveyItems;
+  }, [inboxOverlay, tab, reviewItems, surveyItems]);
 
   const items = useMemo(() => {
     let list = baseItems;
@@ -744,7 +812,9 @@ function InboxScreen({ unreadIds, onMarkRead }) {
     return list;
   }, [baseItems, activeFilters, query]);
 
-  const newCount = items.filter((item) => unreadIds.has(item.id)).length;
+  const unreadOf = (item) => unreadIds.has(item.id) || extraUnread.has(item.id);
+  const newCount = inboxOverlay?.newCount ?? items.filter(unreadOf).length;
+  const inboxSubtitle = inboxOverlay?.subtitle ?? `${newCount} New Responses`;
 
   const toggleDraft = (type, value, label, single = false) => {
     setDraft((cur) => {
@@ -764,21 +834,37 @@ function InboxScreen({ unreadIds, onMarkRead }) {
     <div className="screen inbox-screen">
       <header className="app-topbar">
         <h2>Inbox</h2>
-        <p>{newCount} New Responses</p>
+        <p>{inboxSubtitle}</p>
       </header>
 
       <div className="seg-tabs">
-        <button className={`seg ${tab === "surveys" ? "active" : ""}`} type="button" onClick={() => setSearchParams({ tab: "surveys" })}>
+        <button
+          className={`seg ${tab === "surveys" ? "active" : ""}`}
+          type="button"
+          onClick={() => {
+            const next = new URLSearchParams(searchParams);
+            next.set("tab", "surveys");
+            setSearchParams(next);
+          }}
+        >
           Surveys
         </button>
-        <button className={`seg ${tab === "reviews" ? "active" : ""}`} type="button" onClick={() => setSearchParams({ tab: "reviews" })}>
+        <button
+          className={`seg ${tab === "reviews" ? "active" : ""}`}
+          type="button"
+          onClick={() => {
+            const next = new URLSearchParams(searchParams);
+            next.set("tab", "reviews");
+            setSearchParams(next);
+          }}
+        >
           Reviews
         </button>
       </div>
 
       <div className="inbox-list">
         {items.map((item) => {
-          const unread = unreadIds.has(item.id);
+          const unread = unreadOf(item);
           return (
             <button
               key={item.id}
@@ -786,6 +872,12 @@ function InboxScreen({ unreadIds, onMarkRead }) {
               type="button"
               onClick={() => {
                 onMarkRead(item.id);
+                setExtraUnread((cur) => {
+                  if (!cur.has(item.id)) return cur;
+                  const next = new Set(cur);
+                  next.delete(item.id);
+                  return next;
+                });
                 navigate(`/inbox/review/${item.id}`);
               }}
             >
@@ -1737,9 +1829,11 @@ function GroupTrendArrow({ up }) {
 }
 
 function ToDoScreen() {
-  const [view, setView] = useState("store");
-  const [groupsTab, setGroupsTab] = useState("objectives");
-  const [selectedGroups, setSelectedGroups] = useState(() => STORE_GROUPS.map((g) => g.value));
+  const [searchParams] = useSearchParams();
+  const todoOverlay = getNoticeScenario(searchParams.get("notice"))?.todo;
+  const [view, setView] = useState(() => (searchParams.get("view") === "groups" ? "groups" : "store"));
+  const [groupsTab, setGroupsTab] = useState(() => todoOverlay?.groupsTab ?? "objectives");
+  const [selectedGroups, setSelectedGroups] = useState(() => groupsFromSearchParams(searchParams));
   const [selectedLocationId, setSelectedLocationId] = useState(null);
   const [items, setItems] = useState(() => ACTION_ITEMS.map((a) => ({ ...a })));
   const [addOpen, setAddOpen] = useState(false);
@@ -1749,8 +1843,9 @@ function ToDoScreen() {
   const remaining = items.filter((i) => !i.done).length;
   const activeItem = items.find((i) => i.id === activeId) || null;
   const selectedLocation = selectedLocationId ? locations.find((l) => l.id === selectedLocationId) : null;
+  const overlayMeta = todoOverlay?.locationMeta?.[selectedLocation?.id];
   const storeMeta = selectedLocation
-    ? LOCATION_TODO_META[selectedLocation.id]
+    ? { ...LOCATION_TODO_META[selectedLocation.id], ...overlayMeta }
     : { objective: "Order Accuracy", focus: "Special Instructions", start: 71, progress: 73, target: 87, status: "on-track" };
 
   const completeItem = (id) =>
@@ -1769,7 +1864,7 @@ function ToDoScreen() {
     return locations
       .filter((loc) => visibleLocationIds.includes(loc.id))
       .map((loc, i) => {
-        const meta = LOCATION_TODO_META[loc.id];
+        const meta = { ...LOCATION_TODO_META[loc.id], ...(todoOverlay?.locationMeta?.[loc.id] || {}) };
         if (groupsTab === "objectives") {
           return {
             id: loc.id,
@@ -1779,7 +1874,8 @@ function ToDoScreen() {
             up: meta.progress >= meta.start
           };
         }
-        const onTrack = loc.cer >= goal;
+        const overlayStatus = todoOverlay?.locationMeta?.[loc.id]?.status;
+        const onTrack = overlayStatus ? overlayStatus !== "off-track" : loc.cer >= goal;
         if (groupsTab === "on-track" && !onTrack) return null;
         if (groupsTab === "off-track" && onTrack) return null;
         return {
@@ -1791,7 +1887,7 @@ function ToDoScreen() {
         };
       })
       .filter(Boolean);
-  }, [visibleLocationIds, groupsTab]);
+  }, [visibleLocationIds, groupsTab, todoOverlay]);
 
   const openLocation = (locId) => {
     setSelectedLocationId(locId);
@@ -1803,10 +1899,12 @@ function ToDoScreen() {
     ? locationShortName(selectedLocation)
     : view === "store"
       ? "To-Do List"
-      : "March Objectives";
+      : (todoOverlay?.title ?? "March Objectives");
   const topSubtitle = view === "location" && selectedLocation
     ? selectedLocation.manager
-    : "25 Days Left";
+    : view === "groups"
+      ? (todoOverlay?.subtitle ?? "25 Days Left")
+      : "25 Days Left";
 
   return (
     <div className="screen todo-screen">
@@ -2323,13 +2421,47 @@ function ReviewMetricTile({ label, value, unit, kind }) {
 }
 
 function PerformanceScreen() {
-  const [tab, setTab] = useState("surveys");
+  const [searchParams] = useSearchParams();
+  const initialFilters = statsFiltersFromSearchParams(searchParams);
+  const statsOverlay = getNoticeScenario(searchParams.get("notice"))?.stats;
+  const [tab, setTab] = useState(() => (searchParams.get("tab") === "reviews" ? "reviews" : "surveys"));
   const [metric, setMetric] = useState("cer");
   const [filterOpen, setFilterOpen] = useState(false);
-  const [draft, setDraft] = useState(() => [...DEFAULT_STATS_FILTERS]);
-  const [activeFilters, setActiveFilters] = useState(() => [...DEFAULT_STATS_FILTERS]);
+  const [draft, setDraft] = useState(() => [...initialFilters]);
+  const [activeFilters, setActiveFilters] = useState(() => [...initialFilters]);
   const [activeReport, setActiveReport] = useState(null);
-  const perfMetric = PERF_METRICS[metric];
+  const perfMetric = metric === "cer" && statsOverlay?.cer ? statsOverlay.cer : PERF_METRICS[metric];
+  const incident = {
+    value: "29",
+    kind: "good",
+    rank: "12",
+    total: "14",
+    rankKind: "bad",
+    company: "21",
+    note: "Lower incident rates indicate better customer experience recovery",
+    ...statsOverlay?.incidentRate
+  };
+  const recoveryRate = {
+    value: "15",
+    kind: "bad",
+    rank: "6",
+    total: "14",
+    rankKind: "mid",
+    ...statsOverlay?.recoveryRate
+  };
+  const recoveryRevenue = {
+    value: "$264",
+    kind: "good",
+    note: "*Estimated value of customer relationships saved through incident resolution",
+    ...statsOverlay?.recoveryRevenue
+  };
+  const platforms = statsOverlay?.reviewPlatforms ?? reviewPlatforms;
+  const responseRate = {
+    value: "73",
+    kind: "good",
+    replies: "22 / 30",
+    ...statsOverlay?.responseRate
+  };
   const locationFilters = activeFilters.filter((f) => f.type === "location");
   const locationLabel =
     locationFilters.length === 0
@@ -2337,6 +2469,38 @@ function PerformanceScreen() {
       : locationFilters.length === 1
         ? locationFilters[0].label
         : `${locationFilters.length} Locations`;
+  const statsSection = searchParams.get("section");
+
+  useEffect(() => {
+    if (statsSection === "incident-rate" || statsSection === "recovery") {
+      setTab("surveys");
+    }
+  }, [statsSection]);
+
+  useEffect(() => {
+    if (tab !== "surveys") return;
+    const targetId =
+      statsSection === "incident-rate"
+        ? "stats-incident-rate"
+        : statsSection === "recovery"
+          ? "stats-recovery"
+          : null;
+    if (!targetId) return;
+
+    const timer = window.setTimeout(() => {
+      const el = document.getElementById(targetId);
+      const scroller = el?.closest(".perf-scroll");
+      if (!el || !scroller) return;
+      const elRect = el.getBoundingClientRect();
+      const scRect = scroller.getBoundingClientRect();
+      scroller.scrollTo({
+        top: scroller.scrollTop + (elRect.top - scRect.top) - 8,
+        behavior: "smooth"
+      });
+    }, 80);
+
+    return () => window.clearTimeout(timer);
+  }, [statsSection, tab, statsOverlay]);
 
   const toggleDraft = (type, value, label, single = false) => {
     setDraft((cur) => {
@@ -2356,7 +2520,7 @@ function PerformanceScreen() {
     <div className="screen performance-screen">
       <header className="app-topbar">
         <h2>Stats</h2>
-        <p>{tab === "reviews" ? "30 Reviews" : "91 Surveys"}</p>
+        <p>{tab === "reviews" ? (statsOverlay?.reviewSubtitle ?? "30 Reviews") : (statsOverlay?.surveySubtitle ?? "91 Surveys")}</p>
       </header>
 
       <div className="seg-tabs">
@@ -2412,47 +2576,49 @@ function PerformanceScreen() {
               <PerfChart yTicks={perfMetric.yTicks} line={perfMetric.line} fmt={perfMetric.fmt} />
             </section>
 
-            <section className="surface-card stat-card">
+            <section id="stats-incident-rate" className="surface-card stat-card stats-anchor">
               <div className="stat-card-head">
                 <h3>Incident Rate</h3>
-                <ValBadge value="29" unit="%" kind="good" lg />
+                <ValBadge value={incident.value} unit="%" kind={incident.kind} lg />
               </div>
               <div className="stat-divider" />
               <div className="stat-rows">
                 <div className="stat-row">
                   <span>Location Rank</span>
-                  <RankPill rank="12" total="14" kind="bad" />
+                  <RankPill rank={incident.rank} total={incident.total} kind={incident.rankKind} />
                 </div>
                 <div className="stat-row">
                   <span>Company Incident Rate</span>
-                  <ValBadge value="21" unit="%" kind="good" />
+                  <ValBadge value={incident.company} unit="%" kind="good" />
                 </div>
               </div>
               <div className="stat-divider" />
-              <p className="stat-note">Lower incident rates indicate better customer experience recovery</p>
+              <p className="stat-note">{incident.note}</p>
             </section>
 
-            <section className="surface-card stat-card">
-              <div className="stat-card-head">
-                <h3>Recovery Rate</h3>
-                <ValBadge value="15" unit="%" kind="bad" lg />
-              </div>
-              <div className="stat-divider" />
-              <div className="stat-rows">
-                <div className="stat-row">
-                  <span>Location Rank</span>
-                  <RankPill rank="6" total="14" kind="mid" />
+            <div id="stats-recovery" className="stats-anchor">
+              <section className="surface-card stat-card">
+                <div className="stat-card-head">
+                  <h3>Recovery Rate</h3>
+                  <ValBadge value={recoveryRate.value} unit="%" kind={recoveryRate.kind} lg />
                 </div>
-              </div>
-            </section>
+                <div className="stat-divider" />
+                <div className="stat-rows">
+                  <div className="stat-row">
+                    <span>Location Rank</span>
+                    <RankPill rank={recoveryRate.rank} total={recoveryRate.total} kind={recoveryRate.rankKind} />
+                  </div>
+                </div>
+              </section>
 
-            <section className="surface-card stat-card">
-              <div className="stat-card-head">
-                <h3>Recovery Revenue*</h3>
-                <ValBadge value="$264" kind="good" lg />
-              </div>
-              <p className="stat-note">*Estimated value of customer relationships saved through incident resolution</p>
-            </section>
+              <section className="surface-card stat-card">
+                <div className="stat-card-head">
+                  <h3>Recovery Revenue*</h3>
+                  <ValBadge value={recoveryRevenue.value} kind={recoveryRevenue.kind} lg />
+                </div>
+                <p className="stat-note">{recoveryRevenue.note}</p>
+              </section>
+            </div>
 
             <h3 className="reports-title">Reports</h3>
             <div className="report-list">
@@ -2469,17 +2635,17 @@ function PerformanceScreen() {
           <>
             <section className="surface-card hero-card">
               <h3>My Average</h3>
-              <StarBadge value="4.02" kind="score-good" large />
+              <StarBadge value={statsOverlay?.reviewAverage ?? "4.02"} kind={statsOverlay?.reviewAverageKind ?? "score-good"} large />
               <div className="hero-divider" />
               <div className="hero-row">
                 <span>Competitors' Avg.</span>
-                <StarBadge value="3.7" kind="score-mid" />
+                <StarBadge value={statsOverlay?.competitorAverage ?? "3.7"} kind={statsOverlay?.competitorKind ?? "score-mid"} />
               </div>
             </section>
 
             <section className="surface-card platform-card">
               <h3 className="card-title">Reviews by Platform</h3>
-              {reviewPlatforms.map((p) => (
+              {platforms.map((p) => (
                 <div className="platform-row" key={p.name}>
                   <ChannelLogo channel={p.channel} />
                   <strong>{p.name}</strong>
@@ -2491,11 +2657,11 @@ function PerformanceScreen() {
 
             <section className="surface-card response-rate-card">
               <h3>Response Rate</h3>
-              <ValBadge value="73" unit="%" kind="good" lg />
+              <ValBadge value={responseRate.value} unit="%" kind={responseRate.kind} lg />
               <div className="hero-divider" />
               <div className="hero-row">
                 <span>Total Replies</span>
-                <span className="replies-chip">22 / 30</span>
+                <span className="replies-chip">{responseRate.replies}</span>
               </div>
             </section>
 

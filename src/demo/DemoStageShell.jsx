@@ -12,8 +12,11 @@ export default function DemoStageShell({ children }) {
     if (!viewport || !stage) return undefined;
 
     const update = () => {
-      const availW = viewport.clientWidth;
-      const availH = viewport.clientHeight;
+      const styles = getComputedStyle(viewport);
+      const padX = parseFloat(styles.paddingLeft) + parseFloat(styles.paddingRight);
+      const padY = parseFloat(styles.paddingTop) + parseFloat(styles.paddingBottom);
+      const availW = Math.max(0, viewport.clientWidth - padX);
+      const availH = Math.max(0, viewport.clientHeight - padY);
       const w = stage.offsetWidth;
       const h = stage.offsetHeight;
       if (!w || !h || !availW || !availH) return;

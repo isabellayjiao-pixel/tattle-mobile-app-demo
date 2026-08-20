@@ -15,8 +15,8 @@ export const brand = {
   accentColor: "#FF6B35",
   responseSignature: "The Crestline Team",
   tattleScore: 87,
-  totalLocations: 11,
-  activeLocations: 11,
+  totalLocations: 17,
+  activeLocations: 17,
 };
 
 // ─────────────────────────────────────────
@@ -34,6 +34,12 @@ export const locations = [
   { id: "loc_009", name: "Nashville – Brentwood", city: "Brentwood", state: "TN", address: "740 Old Hickory Blvd, Brentwood, TN 37027", manager: "Rachel Kim", cer: 95, avgRating: 4.8, responseRate: 97, nps: 81, openDate: "2022-06-05" },
   { id: "loc_010", name: "Denver – LoDo", city: "Denver", state: "CO", address: "1415 Market St, Denver, CO 80202", manager: "Aaron Patel", cer: 80, avgRating: 4.2, responseRate: 83, nps: 57, openDate: "2023-03-20" },
   { id: "loc_011", name: "Denver – Cherry Creek", city: "Denver", state: "CO", address: "2800 E 2nd Ave, Denver, CO 80206", manager: "Mia Johansson", cer: 86, avgRating: 4.4, responseRate: 89, nps: 64, openDate: "2023-09-01" },
+  { id: "loc_012", name: "Houston – Galleria", city: "Houston", state: "TX", address: "5085 Westheimer Rd, Houston, TX 77056", manager: "Elena Vasquez", cer: 79, avgRating: 4.1, responseRate: 80, nps: 55, openDate: "2020-11-08" },
+  { id: "loc_013", name: "Houston – Katy", city: "Katy", state: "TX", address: "23501 Cinco Ranch Blvd, Katy, TX 77494", manager: "Noah Briggs", cer: 76, avgRating: 4.0, responseRate: 77, nps: 50, openDate: "2021-05-19" },
+  { id: "loc_014", name: "Houston – Sugar Land", city: "Sugar Land", state: "TX", address: "16535 Southwest Fwy, Sugar Land, TX 77479", manager: "Priya Shah", cer: 91, avgRating: 4.6, responseRate: 93, nps: 71, openDate: "2019-06-12" },
+  { id: "loc_015", name: "Houston – Heights", city: "Houston", state: "TX", address: "405 W 19th St, Houston, TX 77008", manager: "Chris Nguyen", cer: 72, avgRating: 3.8, responseRate: 70, nps: 42, openDate: "2022-03-04" },
+  { id: "loc_016", name: "Houston – Pearland", city: "Pearland", state: "TX", address: "11200 Broadway St, Pearland, TX 77584", manager: "Alicia Grant", cer: 88, avgRating: 4.5, responseRate: 90, nps: 66, openDate: "2021-10-21" },
+  { id: "loc_017", name: "Houston – Energy Corridor", city: "Houston", state: "TX", address: "14700 Grisby Rd, Houston, TX 77079", manager: "Omar Haddad", cer: 84, avgRating: 4.3, responseRate: 86, nps: 61, openDate: "2023-01-16" },
 ];
 
 // ─────────────────────────────────────────
