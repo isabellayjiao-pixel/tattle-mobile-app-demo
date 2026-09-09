@@ -12,7 +12,17 @@ const base = {
   strokeLinejoin: "round"
 };
 
-export function IconInbox(props) {
+export function IconInbox({ filled, ...props }) {
+  if (filled) {
+    return (
+      <svg width={24} height={24} viewBox="0 0 24 24" fill="currentColor" {...props}>
+        <path
+          fillRule="evenodd"
+          d="M20 4H4C2.9 4 2.01 4.9 2.01 6L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2Zm0 4-8 5-8-5V6l8 5 8-5v2Z"
+        />
+      </svg>
+    );
+  }
   return (
     <svg {...base} {...props}>
       <path d="M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z" />
@@ -21,7 +31,24 @@ export function IconInbox(props) {
   );
 }
 
-export function IconTodo(props) {
+export function IconTodo({ filled, ...props }) {
+  if (filled) {
+    return (
+      <svg width={24} height={24} viewBox="0 0 24 24" fill="none" {...props}>
+        <circle cx="6.2" cy="8" r="3.05" fill="currentColor" />
+        <path
+          d="M4.85 8.05 5.95 9.2 7.7 6.9"
+          stroke="#fff"
+          strokeWidth="1.7"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <rect x="11.1" y="7" width="9.2" height="2.05" rx="1.02" fill="currentColor" />
+        <circle cx="6.2" cy="16.1" r="2.2" stroke="currentColor" strokeWidth="1.7" />
+        <rect x="11.1" y="15.1" width="9.2" height="2.05" rx="1.02" fill="currentColor" />
+      </svg>
+    );
+  }
   return (
     <svg {...base} {...props}>
       <path d="M9 6h11" />
@@ -34,7 +61,16 @@ export function IconTodo(props) {
   );
 }
 
-export function IconStats(props) {
+export function IconStats({ filled, ...props }) {
+  if (filled) {
+    return (
+      <svg width={24} height={24} viewBox="0 0 24 24" fill="currentColor" {...props}>
+        <rect x="3.6" y="13.2" width="4.4" height="7.3" rx="2.2" />
+        <rect x="9.8" y="8.4" width="4.4" height="12.1" rx="2.2" />
+        <rect x="16" y="4.5" width="4.4" height="16" rx="2.2" />
+      </svg>
+    );
+  }
   return (
     <svg {...base} {...props}>
       <path d="M5 20V11" />
@@ -53,7 +89,17 @@ export function IconBell(props) {
   );
 }
 
-export function IconProfile(props) {
+export function IconProfile({ filled, ...props }) {
+  if (filled) {
+    return (
+      <svg width={24} height={24} viewBox="0 0 24 24" fill="currentColor" {...props}>
+        <path
+          fillRule="evenodd"
+          d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54A.5.5 0 0 0 13.92 2h-3.84a.5.5 0 0 0-.48.41L9.24 4.95c-.59.24-1.12.56-1.62.94l-2.39-.96a.5.5 0 0 0-.6.22L2.71 8.47a.49.49 0 0 0 .12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.3.6.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.48-.41l.36-2.54c.59-.24 1.12-.56 1.62-.94l2.39.96c.23.08.48 0 .6-.22l1.92-3.32a.49.49 0 0 0-.12-.61l-2.03-1.58ZM12 15.6A3.6 3.6 0 1 0 12 8.4a3.6 3.6 0 0 0 0 7.2Z"
+        />
+      </svg>
+    );
+  }
   return (
     <svg {...base} {...props}>
       <circle cx="12" cy="12" r="9" />

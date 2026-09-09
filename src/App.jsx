@@ -407,7 +407,7 @@ function BottomNav({ active }) {
           type="button"
           onClick={() => navigate(to)}
         >
-          <Icon width={22} height={22} />
+          <Icon width={22} height={22} filled />
           <span>{label}</span>
         </button>
       ))}
@@ -868,7 +868,7 @@ function InboxScreen({ unreadIds, onMarkRead }) {
           return (
             <button
               key={item.id}
-              className={`inbox-item ${unread ? (item.sentiment === "negative" ? "unread-crit" : "unread") : ""}`}
+              className={`inbox-item ${tab === "surveys" ? "is-survey" : ""} ${unread ? (item.sentiment === "negative" ? "unread-crit" : "unread") : ""}`}
               type="button"
               onClick={() => {
                 onMarkRead(item.id);
@@ -881,7 +881,7 @@ function InboxScreen({ unreadIds, onMarkRead }) {
                 navigate(`/inbox/review/${item.id}`);
               }}
             >
-              {unread ? (
+              {unread && tab === "reviews" ? (
                 <span
                   className={`inbox-unread-dot ${item.sentiment === "negative" ? "crit" : ""}`}
                   aria-hidden
