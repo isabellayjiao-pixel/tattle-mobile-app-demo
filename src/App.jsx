@@ -1119,9 +1119,11 @@ function ReplyComposer({ isReview, aiText, onClose }) {
             value={text}
             onChange={(e) => setText(e.target.value)}
           />
-          <button type="button" className={`add-reward ${reward ? "attached" : ""}`} onClick={() => setRewardOpen(true)}>
-            {reward ? `✓ ${reward.reward.replace(" next order", "")}` : "Add Reward"}
-          </button>
+          {!isReview ? (
+            <button type="button" className={`add-reward ${reward ? "attached" : ""}`} onClick={() => setRewardOpen(true)}>
+              {reward ? `✓ ${reward.reward.replace(" next order", "")}` : "Add Reward"}
+            </button>
+          ) : null}
         </div>
 
         <button
@@ -1141,7 +1143,7 @@ function ReplyComposer({ isReview, aiText, onClose }) {
         />
       ) : null}
 
-      {rewardOpen ? (
+      {!isReview && rewardOpen ? (
         <AddRewardOverlay
           initial={reward}
           onClose={() => setRewardOpen(false)}
